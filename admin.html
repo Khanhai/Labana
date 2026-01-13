@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<style>
+body{background:#111;color:#fff;font-family:sans-serif;margin:20px;}
+img{width:200px;border-radius:10px;display:block;margin-bottom:5px;}
+.card{display:inline-block;margin:10px;padding:10px;border:1px solid #0f0;border-radius:8px;}
+button{margin:3px;padding:5px 10px;border:none;border-radius:5px;background:#0f0;color:#000;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<h2>Captured Images</h2>
+<div id="images"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getDatabase, ref, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAfgvWqYfrzKeqdp63r3mXDrb9TxIIvd04",
+  authDomain: "kolkata-964e4.firebaseapp.com",
+  databaseURL: "https://kolkata-964e4-default-rtdb.firebaseio.com",
+  projectId: "kolkata-964e4",
+  storageBucket: "kolkata-964e4.appspot.com",
+  messagingSenderId: "377401156222",
+  appId: "1:377401156222:web:2b3500de97c8a0acb0ae2f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const imagesDiv = document.getElementById("images");
+
+onChildAdded(ref(db, "tempImages"), snap => {
+  const data = snap.val();
+  const key = snap.key;
+
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const img = document.createElement("img");
+  img.src = data.image;
+
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Save";
+  saveBtn.onclick = () => {
+    // Create a temporary link for download
+    const link = document.createElement("a");
+    link.href = data.image;
+    link.download = `selfie_${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.onclick = async () => {
+    await remove(ref(db, "tempImages/" + key));
+    card.remove();
+  };
+
+  card.append(img, saveBtn, deleteBtn);
+  imagesDiv.appendChild(card);
+});
+</script>
+
+</body>
+</html>
